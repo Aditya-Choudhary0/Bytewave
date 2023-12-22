@@ -68,11 +68,47 @@ const startInterview = async (req, res, next) => {
     }
   };
   
-
+  
+  const UpdateInterview = async (req, res, next) => {
+    const { sessionToken, conversation, type } = req.body;
+  
+    console.log(sessionToken, conversation);
+    try {
+      
+      const userResponse = conversation[conversation.length - 1].content;
+  
+      const response = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          ...conversation,
+          { role: "user", content: UpdateInterviewPrompt },
+        ],
+      });
+      console.log(response.choices, "bb");
+      const nextQuestion = response.choices[0].message.content;
+      console.log(nextQuestion, "cc");
+      const updatedInterview = await Interview.findOneAndUpdate(
+        { sessionToken },
+        { $push: { conversation: { role: "assistant", content: nextQuestion } } },
+        { new: true }
+      );
+  
+      res.status(200).json({
+        msg: "Next question retrieved",
+        nextQuestion,
+        UpdateInterviewPrompt,
+        updatedInterview,
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(400).json({ error: error.message });
+    }
+  };
+  
 
 module.exports = {
     endInterviewPrompt,
     startingPrompt,
     startInterview,
- 
+    UpdateInterview,
   };
