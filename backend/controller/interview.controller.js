@@ -104,6 +104,45 @@ const startInterview = async (req, res, next) => {
       res.status(400).json({ error: error.message });
     }
   };
+
+  const EndInterview = async (req, res, next) => {
+    const { conversation } = req.body;
+    console.log(conversation, "blah");
+  
+    try {
+      const response = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          ...conversation,
+          { role: "user", content: endInterviewPrompt },
+        ],
+      });
+      const endObj = response.choices[0].message.content;
+      res
+        .status(200)
+        .json({ msg: "Interview is stopped now", endObj, endInterviewPrompt });
+      console.log(response.choices);
+    } catch (error) {
+      console.log(error);
+      res.status(400).json({ error: error.message });
+    }
+  };
+  
+  const AiResponse = async (req, res, next) => {
+    try {
+      const { conversation } = req.body;
+      console.log(conversation);
+      let response = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: conversation,
+      });
+      console.log(response);
+      res.json({ answer: response.choices[0].message.content });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error: error.message });
+    }
+  };
   
 
 module.exports = {
@@ -111,4 +150,6 @@ module.exports = {
     startingPrompt,
     startInterview,
     UpdateInterview,
+    EndInterview,
+    AiResponse,
   };
